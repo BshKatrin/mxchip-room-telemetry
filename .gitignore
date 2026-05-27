@@ -11,3 +11,7 @@ __MACOSX/
 
 # MXChip
 .pio/
+
+# uv
+uv.lock
+.venv/
