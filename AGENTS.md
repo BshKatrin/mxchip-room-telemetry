@@ -15,41 +15,58 @@ Telemetry is sent to a local backend for time-series storage and visualization.
 
 ---
 
-## 2. System architecture
+## 2. Change tracking
 
-### 2.1 On-device architecture
+Use SYSTEM_LOG.md as the running engineering log for this project.
+
+When making changes:
+
+- Update SYSTEM_LOG.md in the same change set as any code modification
+- Record _intent and system impact_, not just file diffs
+- Focus on why a change was made and what behavior changed (e.g. telemetry reliability, latency, buffering, schema changes)
+- Keep entries short and incremental rather than large summaries
+- Include failed experiments if they affect design decisions
+
+Keep AGENTS.md as a stable orientation document (architecture + rules only).  
+Keep SYSTEM_LOG.md as the evolving history of design decisions and system behavior.
+
+---
+
+## 3. System architecture
+
+### 3.1 On-device architecture
 
 - C firmware: hardware abstraction, Wi-Fi connectivity, HTTP networking
 - Rust firmware: sensor processing and computation
 - Communication between layers: UART (primary interface)
 
-### 2.2 System-level architecture
+### 3.2 System-level architecture
 
 MXChip → HTTP POST → FastAPI server → InfluxDB → Grafana
 
 ---
 
-## 3. Telemetry design
+## 4. Telemetry design
 
-### 3.1 Device → backend transport
+### 4.1 Device → backend transport
 
 - Protocol: HTTP
 - Payload format: JSON
 - Transmission: periodic HTTP POST requests from MXChip to backend
 
-### 3.2 Backend stack (local-first)
+### 4.2 Backend stack (local-first)
 
 - FastAPI: telemetry ingestion API
 - InfluxDB: time-series storage
 - Grafana: visualization and dashboards
 
-### 3.3 Client access
+### 4.3 Client access
 
 - Grafana accessed via browser (desktop or mobile)
 
 ---
 
-## 4. Data reliability constraints
+## 5. Data reliability constraints
 
 - Backend may be temporarily offline
 - Device-side retry or buffering may be required
@@ -58,20 +75,20 @@ MXChip → HTTP POST → FastAPI server → InfluxDB → Grafana
 
 ---
 
-## 5. Build systems
+## 6. Build systems
 
 - C firmware: PlatformIO
 - Rust firmware: Cargo (bare-metal embedded target)
 
 ---
 
-## 6. Hardware
+## 7. Hardware
 
 - Target device: MXChip IoT Developer Kit (STM32-based)
 
 ---
 
-## 7. Backend structure management
+## 8. Backend structure management
 
 The `backend/` Python service is not fixed and may be refactored when beneficial for clarity, maintainability, or scalability.
 
@@ -97,7 +114,7 @@ Prefer practical structure over initial layout. The backend is expected to evolv
 
 ---
 
-## 8. Python environment and dependency management
+## 9. Python environment and dependency management
 
 All Python dependencies and execution must be managed using `uv`.
 

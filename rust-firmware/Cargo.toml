@@ -1,0 +1,10 @@
+[package]
+name = "mxchip-sensor-logic"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+heapless = "0.8"
