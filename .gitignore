@@ -1,0 +1,13 @@
+# General
+.DS_Store
+__MACOSX/
+.AppleDouble
+
+# Resource forks
+._*
+
+# VSCode
+.vscode/
+
+# MXChip
+.pio/
