@@ -1,5 +1,17 @@
 # System Log
 
+## 2026-05-30 - Public host scrub for GitHub
+
+- Replaced committed EC2 IP references with `<public-host>` or `your-ec2-public-host-or-domain` placeholders.
+- Kept the real EC2 host as private runtime configuration in ignored `.env` files or PlatformIO build flags.
+
+## 2026-05-30 - Public Nginx entrypoint for EC2
+
+- Added Nginx to the remote Compose stack as the public HTTP entrypoint for FastAPI and Grafana.
+- Routed FastAPI at `http://<public-host>/` and Grafana at `http://<public-host>/grafana/`.
+- Kept InfluxDB private by binding it to `127.0.0.1:8086` on the EC2 host only for SSH-tunnel access.
+- Updated MXChip PlatformIO build flags so telemetry posts to EC2 over public HTTP port 80.
+
 ## 2026-05-30 - Repository module split for remote deployment
 
 - Moved device firmware into `mxchip/`, keeping PlatformIO C/C++ firmware and Rust sensor/data-prep crate together as one device module.
@@ -35,6 +47,6 @@
 - Firmware now reads HTS221/LPS22HB values through DevKit APIs, builds stable telemetry JSON, queues it, and posts to FastAPI over HTTP.
 - Wi-Fi uses credentials already stored on the device by default; optional `WIFI_SSID`, `WIFI_PASS`, `BACKEND_HOST` build flags can override at build time.
 - Added serial logging for queued payload, POST URL, HTTP status, and response body to debug what MXChip sends.
-- First upload succeeded over ST-Link. Serial showed sensor payload generation and HTTP attempts; initial build still targeted fallback `192.168.1.10`, so backend host was moved into `platformio.ini` as `BACKEND_HOST=192.168.68.109`.
+- First upload succeeded over ST-Link. Serial showed sensor payload generation and HTTP attempts; initial build still targeted fallback host, so backend host was moved into `platformio.ini`.
 - Replaced MXChip `HTTPClient` POST with raw `WiFiClient` HTTP because the bundled client appends an extra CRLF after the body; uvicorn accepted the telemetry but then emitted a follow-on `400 Invalid HTTP request`, causing duplicate retries.
-- Verified on hardware after upload: MXChip connected as `192.168.68.114`, posted telemetry to `192.168.68.109:8000/api/v1/telemetry`, received repeated `HTTP/1.1 202 Accepted`, and logged `telemetry posted`.
+- Verified on hardware after upload: MXChip posted telemetry to the local backend, received repeated `HTTP/1.1 202 Accepted`, and logged `telemetry posted`.

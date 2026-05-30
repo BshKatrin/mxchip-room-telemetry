@@ -58,7 +58,7 @@ To build with explicit credentials:
 
 ```bash
 pio run --target upload --upload-port /dev/cu.usbmodem11403 \
-  --project-option='build_flags=-D DEVICE_ID=\"mxchip-devkit-01\" -D WIFI_SSID=\"YourSSID\" -D WIFI_PASS=\"YourPassword\" -D BACKEND_HOST=\"192.168.1.25\"'
+  --project-option='build_flags=-D DEVICE_ID=\"mxchip-devkit-01\" -D WIFI_SSID=\"YourSSID\" -D WIFI_PASS=\"YourPassword\" -D BACKEND_HOST=\"your-ec2-public-host-or-domain\" -D BACKEND_PORT=80'
 ```
 
 Rust firmware logic lives in `mxchip/rust-firmware/`.
@@ -85,6 +85,15 @@ FastAPI image from `backend/` and set `BACKEND_IMAGE` in `infra/.env`.
 ```bash
 docker build -t mxchip-room-telemetry-api:latest backend
 ```
+
+Public EC2 routes:
+
+- FastAPI: `http://<public-host>/`
+- Telemetry ingestion: `http://<public-host>/api/v1/telemetry`
+- Grafana: `http://<public-host>/grafana/`
+
+InfluxDB is bound only to localhost on the EC2 host and can be reached through
+an SSH tunnel when needed.
 
 ## Telemetry JSON
 

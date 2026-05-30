@@ -1,0 +1,12 @@
+; Copy this file to platformio.local.ini and replace the placeholder host.
+; platformio.local.ini is ignored by git.
+
+[env:mxchip_az3166]
+platform = ststm32
+board = mxchip_az3166
+framework = arduino
+monitor_speed = 115200
+build_flags =
+    -D DEVICE_ID=\"mxchip-devkit-01\"
+    -D BACKEND_HOST=\"your-ec2-public-host-or-domain\"
+    -D BACKEND_PORT=80

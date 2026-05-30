@@ -9,7 +9,7 @@
 #include <string.h>
 
 #ifndef BACKEND_HOST
-#define BACKEND_HOST "192.168.1.10"
+#define BACKEND_HOST "your-ec2-public-host-or-domain"
 #endif
 
 #ifndef BACKEND_PORT

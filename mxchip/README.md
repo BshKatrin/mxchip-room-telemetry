@@ -24,7 +24,14 @@ To override network settings at build time:
 
 ```bash
 pio run --target upload --upload-port /dev/cu.usbmodem11403 \
-  --project-option='build_flags=-D DEVICE_ID=\"mxchip-devkit-01\" -D WIFI_SSID=\"YourSSID\" -D WIFI_PASS=\"YourPassword\" -D BACKEND_HOST=\"your-api-host\"'
+  --project-option='build_flags=-D DEVICE_ID=\"mxchip-devkit-01\" -D WIFI_SSID=\"YourSSID\" -D WIFI_PASS=\"YourPassword\" -D BACKEND_HOST=\"your-ec2-public-host-or-domain\" -D BACKEND_PORT=80'
+```
+
+For a persistent local target, copy `platformio.local.ini.example` to
+`platformio.local.ini`, put the real host there, and keep that file uncommitted.
+
+```bash
+pio run -c platformio.local.ini --target upload --upload-port /dev/cu.usbmodem11403
 ```
 
 ## Rust firmware

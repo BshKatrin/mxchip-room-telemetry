@@ -31,3 +31,4 @@ keys/
 # Local secrets
 .env
 !.env.example
+mxchip/platformio.local.ini
