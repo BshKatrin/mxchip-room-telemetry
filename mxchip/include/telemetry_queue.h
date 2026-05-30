@@ -4,6 +4,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TELEMETRY_QUEUE_CAPACITY 8
 #define TELEMETRY_PAYLOAD_MAX 256
 
@@ -26,5 +30,9 @@ bool telemetry_queue_peek(telemetry_queue_t *queue, telemetry_item_t **item);
 void telemetry_queue_pop(telemetry_queue_t *queue);
 void telemetry_queue_schedule_retry(telemetry_item_t *item, unsigned long now_ms);
 size_t telemetry_queue_count(const telemetry_queue_t *queue);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

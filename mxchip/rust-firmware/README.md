@@ -11,8 +11,8 @@ Responsibilities:
 Commands:
 
 ```bash
-cargo test --manifest-path rust-firmware/Cargo.toml
-cargo build --manifest-path rust-firmware/Cargo.toml --target thumbv7em-none-eabihf
+cargo test --manifest-path mxchip/rust-firmware/Cargo.toml
+cargo build --manifest-path mxchip/rust-firmware/Cargo.toml --target thumbv7em-none-eabihf
 ```
 
 This crate is intentionally small. Board drivers stay in C firmware.

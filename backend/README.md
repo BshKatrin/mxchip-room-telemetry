@@ -2,6 +2,14 @@
 
 FastAPI ingestion service for MXChip room telemetry.
 
+## Build image
+
+From repo root:
+
+```bash
+docker build -t mxchip-room-telemetry-api:latest backend
+```
+
 ## Run locally
 
 From repo root:

@@ -20,6 +20,14 @@ uv.lock
 # Python
 __pycache__/
 .pytest_cache/
+*.egg-info/
 
 # Rust
 target/
+
+# Auth
+keys/
+
+# Local secrets
+.env
+!.env.example

@@ -8,8 +8,8 @@ datasources:
     url: http://influxdb:8086
     jsonData:
       version: Flux
-      organization: mxchip
-      defaultBucket: room_telemetry
+      organization: ${INFLUX_ORG}
+      defaultBucket: ${INFLUX_BUCKET}
       tlsSkipVerify: true
     secureJsonData:
-      token: dev-token
+      token: ${INFLUX_TOKEN}

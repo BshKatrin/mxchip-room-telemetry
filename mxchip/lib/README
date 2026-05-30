@@ -1,0 +1,5 @@
+
+Project-specific PlatformIO libraries for the MXChip firmware.
+
+Add private libraries here only when code needs to be shared across multiple
+firmware source files or tests.

@@ -1,0 +1,5 @@
+
+Project headers for the MXChip PlatformIO firmware.
+
+Shared C/C++ declarations live here and are included from files under
+`mxchip/src/`.

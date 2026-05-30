@@ -4,147 +4,167 @@
 
 This repository contains a hybrid embedded systems project using an STM32-based MXChip IoT board.
 
-The system collects environmental sensor data and forwards it to a local backend for storage and visualization.
+The system collects environmental sensor data and forwards it to a backend for storage and visualization.
 
-The architecture is split into two firmware components:
+The architecture is split into:
 
-- C firmware: hardware access, Wi-Fi, and HTTP networking
+- C firmware: hardware access, Wi-Fi, HTTP networking
 - Rust firmware: sensor logic, computation, and data preparation
+- Backend (remote-deployable): ingestion + storage + visualization stack
 
-Telemetry is sent to a local backend for time-series storage and visualization.
+Telemetry is sent from device to a cloud-hosted backend.
 
 ---
 
-## 2. Change tracking
+## 2. Deployment model (remote-centric)
+
+The backend is designed to run on a single remote instance using Docker Compose.
+
+### Remote runtime stack
+
+On remote, the following services run:
+
+- FastAPI (telemetry ingestion API)
+- InfluxDB (time-series database)
+- Grafana (visualization dashboard)
+
+These services are deployed together as a single unit.
+
+### Deployment artifact
+
+The remote instance should only contain:
+
+- `docker-compose.yml`
+- `.env` (secrets/config)
+- persistent Docker volumes (InfluxDB + Grafana data)
+
+Source code is not required at runtime if images are built or pulled.
+
+---
+
+## 3. Change tracking
 
 Use SYSTEM_LOG.md as the running engineering log for this project.
 
 When making changes:
 
 - Update SYSTEM_LOG.md in the same change set as any code modification
-- Record _intent and system impact_, not just file diffs
-- Focus on why a change was made and what behavior changed (e.g. telemetry reliability, latency, buffering, schema changes)
-- Keep entries short and incremental rather than large summaries
+- Record intent and system impact, not just file diffs
+- Focus on why a change was made and what behavior changed
+- Keep entries short and incremental
 - Include failed experiments if they affect design decisions
 
-Keep AGENTS.md as a stable orientation document (architecture + rules only).  
-Keep SYSTEM_LOG.md as the evolving history of design decisions and system behavior.
+Keep AGENTS.md as a stable architecture and operational contract.
 
 ---
 
-## 3. System architecture
+## 4. System architecture
 
-### 3.1 On-device architecture
+### 4.1 Device-side architecture
 
 - C firmware: hardware abstraction, Wi-Fi connectivity, HTTP networking
 - Rust firmware: sensor processing and computation
-- Communication between layers: UART (primary interface)
+- Communication: UART (between Rust and C)
 
-### 3.2 System-level architecture
+### 4.2 System-level architecture
 
-MXChip → HTTP POST → FastAPI server → InfluxDB → Grafana
-
----
-
-## 4. Telemetry design
-
-### 4.1 Device → backend transport
-
-- Protocol: HTTP
-- Payload format: JSON
-- Transmission: periodic HTTP POST requests from MXChip to backend
-
-### 4.2 Backend stack (local-first)
-
-- FastAPI: telemetry ingestion API
-- InfluxDB: time-series storage
-- Grafana: visualization and dashboards
-
-### 4.3 Client access
-
-- Grafana accessed via browser (desktop or mobile)
+MXChip → HTTP POST → FastAPI (remote) → InfluxDB (remote) → Grafana (remote)
 
 ---
 
-## 5. Data reliability constraints
+## 5. Backend runtime constraints (remote)
 
-- Backend may be temporarily offline
-- Device-side retry or buffering may be required
-- System must tolerate intermittent connectivity
-- No guarantee of continuous connectivity
-
----
-
-## 6. Build systems
-
-- C firmware: PlatformIO
-- Rust firmware: Cargo (bare-metal embedded target)
-
----
-
-## 7. Hardware
-
-- Target device: MXChip IoT Developer Kit (STM32-based)
-
----
-
-## 8. Backend structure management
-
-The `backend/` Python service is not fixed and may be refactored when beneficial for clarity, maintainability, or scalability.
-
-### Allowed actions
-
-- Restructure backend internals without changing system behavior
-- Introduce standard FastAPI layouts (`app/`, `core/`, `services/`, `api/`)
-- Split or merge modules to improve separation of concerns
-- Add missing `__init__.py` files when required
-- Introduce a `src/` layout if it improves packaging correctness
+The backend runs as a self-contained Docker stack.
 
 ### Constraints
 
-- MUST preserve system-level architecture (HTTP → FastAPI → InfluxDB → Grafana)
-- MUST preserve existing API behavior and telemetry format unless explicitly instructed otherwise
-- MUST NOT introduce unnecessary complexity
-- MUST NOT introduce external services, brokers, or messaging systems
-- MUST NOT change device-to-backend protocol without explicit instruction
+- MUST run as a single remote-hosted system
+- MUST NOT depend on local machine runtime
+- MUST expose only FastAPI publicly (via security group)
+- InfluxDB and Grafana must remain internal services
+- All persistence must use Docker volumes or EBS-backed storage
 
-### Guiding principle
+### Allowed changes
 
-Prefer practical structure over initial layout. The backend is expected to evolve over time, but behavior stability takes priority over refactoring.
+- Modify FastAPI internal structure
+- Modify Docker Compose services
+- Adjust environment variables and service configuration
+- Add reverse proxy (optional, e.g. Nginx) if needed
+
+### Disallowed changes
+
+- MUST NOT introduce external managed services unless explicitly requested
+- MUST NOT change HTTP ingestion protocol without explicit instruction
+- MUST NOT split backend across multiple cloud providers
 
 ---
 
-## 9. Python environment and dependency management
+## 6. Telemetry design
 
-All Python dependencies and execution must be managed using `uv`.
+### 6.1 Device → backend transport
+
+- Protocol: HTTP
+- Method: POST
+- Payload: JSON
+- Endpoint: FastAPI `/sensor` (or equivalent stable ingestion route)
+
+### 6.2 Backend responsibilities
+
+- FastAPI: validation + ingestion only
+- InfluxDB: storage only
+- Grafana: visualization only
+
+No cross-layer coupling is allowed.
+
+---
+
+## 7. Reliability constraints
+
+- Device must tolerate backend downtime
+- Backend may restart (remote reboot, Docker restart)
+- System must support intermittent connectivity
+- Optional buffering on device is allowed but not required initially
+
+---
+
+## 8. Build systems
+
+- C firmware: PlatformIO
+- Rust firmware: Cargo (embedded target)
+- Backend: Docker + uv (Python dependency management)
+
+---
+
+## 9. Backend structure management
+
+The `backend/` service is deployable to remote and may be restructured for clarity.
+
+### Allowed actions
+
+- Introduce standard FastAPI layouts (`app/`, `core/`, `services/`, `api/`)
+- Split/merge modules for maintainability
+- Add `__init__.py` where needed
+- Introduce `src/` layout if beneficial
+- Modify Docker configuration for remote deployment
+
+### Constraints
+
+- MUST preserve HTTP → FastAPI → InfluxDB → Grafana flow
+- MUST preserve telemetry schema unless explicitly changed
+- MUST keep system deployable via Docker Compose on remote
+- MUST NOT introduce messaging brokers (MQTT, Kafka, etc.)
+
+---
+
+## 10. Python environment and dependency management
+
+All Python dependencies must use `uv`.
 
 - `uv` is the only supported dependency manager
-- Do NOT use `pip`, `venv`, or `poetry`
-- All commands must be executed from the repository root unless explicitly stated otherwise
+- Do NOT use pip, venv, or poetry directly
 
 ### Install dependencies
 
 ```bash
 uv --project=backend add <package>
 ```
-
-### Run Python applications
-
-```bash
-uv run --project backend <command>
-```
-
-## Development priorities
-
-- Prefer minimal firmware complexity
-- Keep device-side logic simple and robust
-- Maintain clear separation between computation (Rust) and hardware/networking (C)
-- Keep backend easy to run locally and portable
-- Avoid premature optimization or over-engineering
-
-## Notes for agents
-
-- Do not introduce MQTT, brokers, or external messaging systems unless explicitly requested
-- Maintain HTTP-based ingestion as the primary communication method
-- Keep telemetry format simple and stable (JSON over HTTP)
-- Prefer incremental improvements over architectural redesigns
