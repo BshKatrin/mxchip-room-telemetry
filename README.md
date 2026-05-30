@@ -48,16 +48,15 @@ C firmware lives in `mxchip/src/`.
 
 ```bash
 cd mxchip
-pio run
-pio run --target upload --upload-port /dev/cu.usbmodem11403
-pio device monitor --port /dev/cu.usbmodem11403 --baud 115200
+pio run -c platformio.local.ini --target upload --upload-port /dev/cu.usbmodem11303
+pio device monitor --port /dev/cu.usbmodem11303 --baud 115200
 ```
 
 By default, firmware uses Wi-Fi credentials already stored on the MXChip.
 To build with explicit credentials:
 
 ```bash
-pio run --target upload --upload-port /dev/cu.usbmodem11403 \
+pio run --target upload --upload-port /dev/cu.usbmodem11303 \
   --project-option='build_flags=-D DEVICE_ID=\"mxchip-devkit-01\" -D WIFI_SSID=\"YourSSID\" -D WIFI_PASS=\"YourPassword\" -D BACKEND_HOST=\"your-ec2-public-host-or-domain\" -D BACKEND_PORT=80'
 ```
 

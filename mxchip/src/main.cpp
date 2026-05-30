@@ -24,7 +24,7 @@
 #define DEVICE_ID "mxchip-devkit-01"
 #endif
 
-#define POST_PERIOD_MS 5000UL
+#define POST_PERIOD_MS 1800000UL
 #define HTTP_RESPONSE_MAX 512
 
 static telemetry_queue_t telemetry_queue;
