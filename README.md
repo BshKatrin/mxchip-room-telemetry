@@ -26,7 +26,7 @@ infra/    EC2 Docker Compose runtime for API, InfluxDB, and Grafana
 ## Backend local development
 
 ```bash
-docker compose --env-file infra/.env.example -f infra/docker-compose.yml up -d influxdb
+docker compose --env-file infra/.env -f infra/docker-compose.yml up -d
 uv run --project backend uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 

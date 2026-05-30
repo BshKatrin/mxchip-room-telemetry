@@ -11,11 +11,12 @@ services:
       - grafana
 
   api:
-    image: ${BACKEND_IMAGE:-mxchip-room-telemetry-api:latest}
-    restart: unless-stopped
+    build:
+      context: ../backend
+    image: ${BACKEND_IMAGE}
     environment:
       APP_NAME: mxchip-room-telemetry
-      INFLUX_URL: http://influxdb:8086
+      INFLUX_URL: http:§//influxdb:8086
       INFLUX_TOKEN: ${INFLUX_TOKEN}
       INFLUX_ORG: ${INFLUX_ORG:-mxchip}
       INFLUX_BUCKET: ${INFLUX_BUCKET:-room_telemetry}
