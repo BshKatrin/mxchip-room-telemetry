@@ -1,5 +1,34 @@
 # System Log
 
+## 2026-10-04 - Public HTTPS dashboard and automatic renewal
+
+- Added a separate HTTPS Compose configuration with a trusted Let's Encrypt IP certificate and secure Grafana session cookies. Public dashboard HTTP redirects to HTTPS; device HTTP ingestion stays unchanged.
+- Added persisted ACME account/certificate and HTTP-01 webroot volumes. The base HTTP configuration supports certificate bootstrap before enabling TLS, preventing Nginx startup failures from missing keys.
+- Added an EC2 systemd timer that checks renewal twice daily, catches missed runs after reboot, and validates/reloads Nginx after successful Certbot checks. No laptop or Codex runtime is involved.
+- Updated deployment docs and AGENTS.md to authorize HTTPS dashboard access through Nginx while keeping database and Grafana container ports private; documented certificate issuance, renewal checks, and firewall requirements.
+- Initial outbound HTTPS failures were resolved after security group changes. Issued the production IP certificate (expires 2026-10-10), enabled HTTPS, and passed a staging renewal dry run with Nginx reload. The remote renewal timer is enabled and active.
+- HTTPS initially worked only inside EC2. AWS console inspection identified an IPv6-only HTTPS rule (`::/0`); after the user added IPv4 access, public HTTPS Grafana health and public HTTP ingestion health both passed, and HTTP dashboard requests redirect to HTTPS.
+- Reconciled the root and firmware READMEs with the deployed behavior; documented IPv4/IPv6 firewall troubleshooting and use of both Compose files for an existing HTTPS deployment.
+- Final verification: public HTTPS dashboard and authenticated Grafana datasource queries return the real device's temperature, humidity, and pressure; HTTP API health and dashboard-to-HTTPS redirects pass. Remote Compose/Nginx validation, backend tests, and shell syntax checks pass; the renewal timer remains enabled and active after its scheduled run.
+
+## 2026-10-03 - Replacement EC2 deployment
+
+- Updated ignored runtime and firmware configuration to target the replacement instance through `ssh ec2-aws`; generated fresh InfluxDB and Grafana credentials for its new volumes.
+- Removed the Compose source-build dependency and added API restart persistence so the remote stack runs from a prebuilt image after Docker or host restarts.
+- Moved Grafana behind a loopback-only proxy listener for SSH access, preserving public HTTP telemetry ingestion and private InfluxDB/Grafana services.
+- Firmware now queues its first sensor reading immediately after boot, then retains the 30-minute sample interval, allowing deployment verification without a long initial wait.
+- Restored the missing backend uv lockfile required by the Docker build. Backend tests passed.
+- Installation initially failed because EC2 outbound HTTP/HTTPS timed out; used a temporary SSH download proxy for provisioning. The legacy MXChip GCC requires Rosetta on this Mac; a native GCC 12 experiment failed against the board SDK headers, so retained the supported GCC 6 toolchain.
+- End-to-end verification exposed an out-of-range pressure sensor reading (`256.12 hPa`) that caused HTTP 422 rejection of every sample. Firmware now omits invalid optional pressure values while preserving valid temperature/humidity and the existing schema; pressure hardware/driver diagnosis remains separate.
+- Removed macOS AppleDouble metadata files accidentally included in the initial transfer, which Grafana tried to parse as provisioning YAML; subsequent transfers disable that metadata.
+- Verification completed on 2026-10-04 (Paris): flashed and verified MXChip; observed HTTP 202 with `stored=true`; queried its real readings directly in InfluxDB and through Grafana. Backend tests, queue test, Compose validation, and Nginx validation passed.
+- Removed the temporary build source and download proxy, restarted Docker, and confirmed all four services recovered automatically with device data preserved. Public health responds; public Grafana returns 404 while loopback Grafana works. Direct EC2 outbound HTTPS still times out, affecting future downloads but not current ingestion.
+
+## 2026-06-30 - Grafana pressure visibility
+
+- Added a Grafana time-series panel for `pressure_hpa`, matching the pressure field already emitted by MXChip firmware and stored in InfluxDB.
+- Intent: make the dashboard reflect all environmental readings currently sent by the active device payload.
+
 ## 2026-05-30 - Public host scrub for GitHub
 
 - Replaced committed EC2 IP references with `<public-host>` or `your-ec2-public-host-or-domain` placeholders.

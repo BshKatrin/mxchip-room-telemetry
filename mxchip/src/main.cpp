@@ -29,6 +29,7 @@
 
 static telemetry_queue_t telemetry_queue;
 static unsigned long last_sample_ms = 0;
+static bool sample_taken = false;
 static bool is_wifi_ready = false;
 static UARTClass RustSerial(UART_1);
 
@@ -55,7 +56,7 @@ void setup() {
 void loop() {
     unsigned long now = millis();
 
-    if (now - last_sample_ms >= POST_PERIOD_MS) {
+    if (!sample_taken || now - last_sample_ms >= POST_PERIOD_MS) {
         char payload[TELEMETRY_PAYLOAD_MAX];
         if (!rust_uart_read_line(payload, sizeof(payload))) {
             sensor_payload(payload, sizeof(payload));
@@ -68,6 +69,7 @@ void loop() {
             log_line("telemetry queue full; sample dropped");
         }
         last_sample_ms = now;
+        sample_taken = true;
     }
 
     telemetry_item_t *item = NULL;
@@ -214,15 +216,23 @@ static void sensor_payload(char *buffer, size_t len) {
     float temperature = getDevKitTemperatureValue(0);
     float humidity = getDevKitHumidityValue();
     float pressure = getDevKitPressureValue();
+    char pressure_field[48] = "";
+
+    // Pressure is optional; an invalid sensor value must not reject the whole sample.
+    if (pressure >= 300.0f && pressure <= 1200.0f) {
+        snprintf(pressure_field, sizeof(pressure_field), ",\"pressure_hpa\":%.2f", pressure);
+    } else {
+        log_line("invalid pressure reading; omitting pressure_hpa");
+    }
 
     snprintf(
         buffer,
         len,
-        "{\"device_id\":\"%s\",\"temperature_c\":%.2f,\"humidity_percent\":%.2f,\"pressure_hpa\":%.2f}",
+        "{\"device_id\":\"%s\",\"temperature_c\":%.2f,\"humidity_percent\":%.2f%s}",
         DEVICE_ID,
         temperature,
         humidity,
-        pressure
+        pressure_field
     );
 }
 

@@ -1,0 +1,16 @@
+# Enable only after issuing the certificate; Compose >= 2.24.4 is required.
+services:
+  nginx:
+    ports: !override
+      - "${HTTP_PORT:-80}:80"
+      - "443:443"
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST}
+    volumes:
+      - ./nginx/https.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - letsencrypt:/etc/letsencrypt:ro
+
+  grafana:
+    environment:
+      GF_SERVER_ROOT_URL: https://${PUBLIC_HOST}/grafana/
+      GF_SECURITY_COOKIE_SECURE: "true"

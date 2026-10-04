@@ -58,6 +58,32 @@
       ],
       "title": "Humidity",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "InfluxDB"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "pressurehpa"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "targets": [
+        {
+          "query": "from(bucket: \"room_telemetry\") |> range(start: -6h) |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"pressure_hpa\")"
+        }
+      ],
+      "title": "Pressure",
+      "type": "timeseries"
     }
   ],
   "schemaVersion": 39,
@@ -75,6 +101,6 @@
   "timezone": "browser",
   "title": "MXChip Room Telemetry",
   "uid": "mxchip-room-telemetry",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

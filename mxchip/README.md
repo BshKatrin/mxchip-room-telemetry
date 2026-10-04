@@ -2,6 +2,11 @@
 
 Device-side firmware for the MXChip AZ3166 board.
 
+Firmware samples once immediately after boot and then every 30 minutes. It
+retries failed HTTP posts using the in-memory queue. Out-of-range optional
+pressure readings are omitted so valid temperature/humidity samples remain
+acceptable to the backend; this does not correct a faulty pressure sensor.
+
 ## Layout
 
 - `src/`: C/C++ firmware for board setup, Wi-Fi, HTTP POST, UART input, and retry queue use.

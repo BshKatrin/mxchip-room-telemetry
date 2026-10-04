@@ -71,14 +71,17 @@ cargo build --manifest-path mxchip/rust-firmware/Cargo.toml --target thumbv7em-n
 
 The EC2 runtime is defined in `infra/`.
 
+Follow [infra/README.md](infra/README.md) for first deployment, certificate
+issuance, and automatic renewal. Once the certificate is installed, manage the
+HTTPS stack with both Compose files:
+
 ```bash
 cd infra
-cp .env.example .env
-docker compose --env-file .env up -d
+docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
 ```
 
-The remote host should only need `infra/docker-compose.yml`, `infra/.env`, the
-Grafana provisioning files under `infra/grafana/`, and Docker volumes. Build the
+The remote host needs the runtime configuration, provisioning files, and TLS
+renewal scripts under `infra/`, a private `.env`, and Docker volumes. Build the
 FastAPI image from `backend/` and set `BACKEND_IMAGE` in `infra/.env`.
 
 ```bash
@@ -89,7 +92,11 @@ Public EC2 routes:
 
 - FastAPI: `http://<public-host>/`
 - Telemetry ingestion: `http://<public-host>/api/v1/telemetry`
-- Grafana: `http://<public-host>/grafana/`
+- Grafana: `https://<public-ip>/grafana/` after the HTTPS setup in [infra/README.md](infra/README.md).
+
+The dashboard uses a free Let's Encrypt IP certificate, with automatic renewal
+checks twice daily on EC2 and Nginx reloads. No domain or load balancer is required.
+The MXChip continues posting over HTTP on port 80.
 
 InfluxDB is bound only to localhost on the EC2 host and can be reached through
 an SSH tunnel when needed.

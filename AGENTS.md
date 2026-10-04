@@ -27,6 +27,8 @@ On remote, the following services run:
 - FastAPI (telemetry ingestion API)
 - InfluxDB (time-series database)
 - Grafana (visualization dashboard)
+- Nginx (public HTTP ingestion and HTTPS dashboard proxy)
+- Certbot (on-demand certificate issuance and renewal)
 
 These services are deployed together as a single unit.
 
@@ -36,7 +38,9 @@ The remote instance should only contain:
 
 - `docker-compose.yml`
 - `.env` (secrets/config)
-- persistent Docker volumes (InfluxDB + Grafana data)
+- `docker-compose.https.yml`, Nginx configuration, and Grafana provisioning
+- certificate renewal scripts and systemd timer/service definitions
+- persistent Docker volumes (InfluxDB + Grafana data, ACME webroot, and Let's Encrypt account/certificates)
 
 Source code is not required at runtime if images are built or pulled.
 
@@ -80,9 +84,16 @@ The backend runs as a self-contained Docker stack.
 
 - MUST run as a single remote-hosted system
 - MUST NOT depend on local machine runtime
-- MUST expose only FastAPI publicly (via security group)
-- InfluxDB and Grafana must remain internal services
+- MUST expose only Nginx host ports 80 and 443 publicly (via security group)
+- Nginx exposes FastAPI HTTP ingestion and Grafana at HTTPS `/grafana/`; Grafana login remains required
+- InfluxDB and Grafana container ports must remain internal; InfluxDB's optional host binding must use loopback
 - All persistence must use Docker volumes or EBS-backed storage
+- Dashboard TLS uses a trusted Let's Encrypt IP certificate; never use self-signed certificates for the public dashboard
+- IP certificates require the `shortlived` ACME profile and Certbot >= 5.4
+- Certificate renewal MUST run automatically on EC2, check twice daily, and reload Nginx after successful renewal
+- Keep inbound 80 for HTTP-01 validation and device ingestion, inbound 443 for HTTPS, and outbound 443 for ACME renewal
+- Renewal MUST NOT depend on a laptop, SSH download proxy, or Codex being open; preserve certificates and account state across restarts
+- Verify renewal with a Certbot dry run and check the enabled systemd timer before reporting automatic renewal as working
 
 ### Allowed changes
 
@@ -90,6 +101,7 @@ The backend runs as a self-contained Docker stack.
 - Modify Docker Compose services
 - Adjust environment variables and service configuration
 - Add reverse proxy (optional, e.g. Nginx) if needed
+- Maintain the existing Nginx/Certbot TLS configuration and remote renewal timer
 
 ### Disallowed changes
 
@@ -106,7 +118,8 @@ The backend runs as a self-contained Docker stack.
 - Protocol: HTTP
 - Method: POST
 - Payload: JSON
-- Endpoint: FastAPI `/sensor` (or equivalent stable ingestion route)
+- Endpoint: FastAPI `/api/v1/telemetry`
+- Preserve HTTP POST on port 80 without redirecting the MXChip to HTTPS; dashboard HTTP requests redirect to HTTPS
 
 ### 6.2 Backend responsibilities
 

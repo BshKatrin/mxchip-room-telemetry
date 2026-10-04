@@ -1,0 +1,63 @@
+server {
+    listen 80;
+    server_name ${PUBLIC_HOST};
+    client_max_body_size 1m;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type text/plain;
+        try_files $uri =404;
+    }
+
+    location = /grafana {
+        return 301 https://${PUBLIC_HOST}/grafana/;
+    }
+
+    location /grafana/ {
+        return 301 https://${PUBLIC_HOST}$request_uri;
+    }
+
+    # Preserve the MXChip HTTP POST protocol without redirects.
+    location / {
+        proxy_pass http://api:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 443 ssl;
+    server_name ${PUBLIC_HOST};
+    client_max_body_size 1m;
+
+    ssl_certificate /etc/letsencrypt/live/mxchip-dashboard/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mxchip-dashboard/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    location = /grafana {
+        return 301 /grafana/;
+    }
+
+    location /grafana/ {
+        proxy_pass http://grafana:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    location / {
+        proxy_pass http://api:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
