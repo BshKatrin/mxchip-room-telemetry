@@ -1,5 +1,19 @@
 # System Log
 
+## 2026-10-15 - Bounded telemetry retention and daily summaries
+
+- Set the raw-data policy to 30 days and introduced daily UTC mean/minimum/maximum/count per device and sensor with 1825-day retention, preserving long-term trends while bounding storage growth.
+- Added repeatable InfluxDB provisioning that backfills and independently verifies summaries and a successful task run before shortening existing raw retention. The hourly task recomputes fully retained completed days to handle delayed readings and downtime without a local scheduler.
+- Updated Grafana to join older daily means with recent raw readings at a whole UTC day boundary; preserved the existing HTTP ingestion schema and remote Docker architecture.
+- Deployed to EC2 after four isolated InfluxDB integration tests passed, covering historical backfill, per-field/device statistics, late writes, repeated provisioning, empty data, failure before retention changes, and partly expired day boundaries. Verified 2009 real raw field values against 144 daily statistics before applying 30-day raw retention; the persisted hourly task passed its test run.
+- Verified loaded Grafana queries over one-day and 40-day ranges for all three panels, access to all daily statistics through the datasource, and healthy public HTTPS Grafana/public HTTP ingestion. Temporary test buckets and tasks were removed; existing services required no restart.
+
+## 2026-10-13 - Grafana historical telemetry visibility
+
+- Investigated the apparent 12-hour history limit on EC2: the InfluxDB bucket has infinite retention and still contains readings from 2026-10-03 22:03 UTC (October 4 in Paris). All three live dashboard queries instead hardcoded a six-hour window, ignoring Grafana's selected range.
+- Changed temperature, humidity, and pressure queries to use Grafana's selected start and stop times, including historical absolute ranges; expanded the default view to 24 hours. Storage and device ingestion remain unchanged.
+- Deployed the provisioning file to EC2; Grafana loaded it automatically without a restart. Authenticated Grafana queries passed for all three panels over 24 hours, seven days, and October 4 (Paris), including readings older than 12 hours. Public HTTP ingestion health remains healthy.
+
 ## 2026-10-04 - Public HTTPS dashboard and automatic renewal
 
 - Added a separate HTTPS Compose configuration with a trusted Let's Encrypt IP certificate and secure Grafana session cookies. Public dashboard HTTP redirects to HTTPS; device HTTP ingestion stays unchanged.

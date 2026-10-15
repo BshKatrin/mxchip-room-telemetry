@@ -26,6 +26,16 @@ InfluxDB binds to host loopback only. For administrative access:
 ssh -N -L 8086:127.0.0.1:8086 ec2-aws
 ```
 
+## Telemetry history in Grafana
+
+The dashboard opens with the last 24 hours and all panels query the time range
+selected in Grafana. Choose a longer or absolute range to view older readings.
+`room_telemetry` retains original readings for 30 days. Older history uses UTC
+daily means from `room_telemetry_daily`, retained for 1825 days. Daily minimum,
+maximum, and per-field sample counts are stored alongside those means.
+See [InfluxDB retention and provisioning](influxdb/README.md) for the schema,
+late-data handling, and verification commands.
+
 ## Build and transfer
 
 Build the API image from the repository root and push or copy it to EC2:
@@ -76,10 +86,16 @@ Enable TLS only after issuance succeeds, so Nginx never starts with missing keys
 ```bash
 sudo docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
 sudo docker compose -f docker-compose.yml -f docker-compose.https.yml exec -T nginx nginx -t
+sudo sh scripts/configure-retention.sh
 curl --fail "https://<public-ip>/grafana/api/health"
 ```
 
 Use both Compose files for subsequent `up`, `exec`, and configuration changes.
+For an existing deployment, copy the updated `influxdb/`, retention script, and
+Grafana provisioning, then run `sudo sh scripts/configure-retention.sh` before
+installing the updated dashboard. This backfills and verifies summaries before
+changing the existing raw bucket to 30-day retention; changing Compose's init
+retention alone does not update an existing bucket.
 Plain `docker compose up` returns the dashboard to the HTTP bootstrap setup.
 After TLS activation the loopback dashboard port is removed; normal browser
 access uses the public HTTPS URL. The admin password is `GRAFANA_ADMIN_PASSWORD`
