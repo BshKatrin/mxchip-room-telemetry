@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="570" viewBox="0 0 1120 570" role="img" aria-labelledby="title desc">
+  <title id="title">One room, two routes, one remote stack</title>
+  <desc id="desc">The MXChip sends temperature, humidity, and valid pressure readings every 30 minutes. HTTP JSON passes through Nginx on port 80 to FastAPI and then InfluxDB. A browser reaches Grafana through Nginx on HTTPS port 443. Grafana queries InfluxDB. All backend services share one AWS EC2 instance running Docker Compose. InfluxDB and Grafana use persistent volumes; only Nginx is public.</desc>
+  <defs>
+    <marker id="teal-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#087f8c"/></marker>
+    <marker id="blue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 10 5 0 10Z" fill="#5265a8"/></marker>
+  </defs>
+  <rect width="1120" height="570" rx="18" fill="#f8fafb"/>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" fill="#203342">
+    <text x="32" y="40" font-size="13" font-weight="700" letter-spacing="2" fill="#687985">IN MY ROOM</text>
+    <rect x="310" y="18" width="786" height="530" rx="14" fill="#eef3f6" stroke="#c4d0d9"/>
+    <text x="334" y="49" font-size="18" font-weight="700">AWS EC2</text>
+    <text x="445" y="49" font-size="15" fill="#526675">One instance / Docker Compose</text>
+    <path d="M334 70H1072" stroke="#c4d0d9"/>
+    <text x="334" y="105" font-size="12" font-weight="700" letter-spacing="1.5" fill="#687985">PUBLIC GATEWAY</text>
+    <text x="584" y="105" font-size="12" font-weight="700" letter-spacing="1.5" fill="#687985">PRIVATE CONTAINER NETWORK</text>
+
+    <!-- Device and viewer remain outside the remote runtime. -->
+    <rect x="32" y="144" width="178" height="136" rx="10" fill="#fff" stroke="#99bfc4"/>
+    <rect x="32" y="144" width="5" height="136" rx="2" fill="#087f8c"/>
+    <text x="50" y="177" font-size="23" font-weight="700">MXChip</text>
+    <text x="50" y="204" font-size="15" fill="#526675">Temperature</text>
+    <text x="50" y="225" font-size="15" fill="#526675">Humidity / pressure*</text>
+    <text x="50" y="257" font-size="13" fill="#087f8c">Wi-Fi / every 30 min</text>
+    <text x="32" y="334" font-size="13" font-weight="700" letter-spacing="2" fill="#687985">WHEREVER I AM</text>
+    <rect x="32" y="357" width="178" height="112" rx="10" fill="#fff" stroke="#afb8d2"/>
+    <rect x="32" y="357" width="5" height="112" rx="2" fill="#5265a8"/>
+    <text x="50" y="393" font-size="23" font-weight="700">Browser</text>
+    <text x="50" y="420" font-size="15" fill="#526675">Remote dashboard</text>
+    <text x="50" y="447" font-size="13" fill="#5265a8">HTTPS / login required</text>
+
+    <!-- One gateway, with separate device and dashboard routes. -->
+    <rect x="334" y="144" width="166" height="325" rx="10" fill="#fff" stroke="#9baeba"/>
+    <text x="354" y="179" font-size="23" font-weight="700">Nginx</text>
+    <text x="354" y="203" font-size="14" fill="#526675">Route requests</text>
+    <path d="M354 224H480" stroke="#dbe3e9"/>
+    <text x="354" y="252" font-size="15" font-weight="600" fill="#087f8c">:80 / HTTP</text>
+    <text x="354" y="275" font-size="13" fill="#526675">Device ingestion</text>
+    <path d="M354 313H480" stroke="#dbe3e9"/>
+    <text x="354" y="391" font-size="15" font-weight="600" fill="#5265a8">:443 / HTTPS</text>
+    <text x="354" y="415" font-size="13" fill="#526675">/grafana/</text>
+    <text x="354" y="447" font-size="12" fill="#526675">Trusted TLS certificate</text>
+
+    <rect x="584" y="144" width="190" height="136" rx="10" fill="#fff" stroke="#99bfc4"/>
+    <text x="604" y="179" font-size="23" font-weight="700">FastAPI</text>
+    <text x="604" y="207" font-size="15" fill="#526675">Validate sensor JSON</text>
+    <text x="604" y="258" font-size="12" font-family="ui-monospace, SFMono-Regular, Consolas, monospace" fill="#087f8c">POST /api/v1/telemetry</text>
+    <rect x="876" y="144" width="196" height="136" rx="10" fill="#fff" stroke="#99bfc4"/>
+    <text x="896" y="179" font-size="23" font-weight="700">InfluxDB</text>
+    <text x="896" y="207" font-size="15" fill="#526675">Store time series</text>
+    <text x="896" y="236" font-size="13" fill="#526675">Raw: 30 days</text>
+    <text x="896" y="258" font-size="13" fill="#526675">Daily: 1825 days</text>
+    <rect x="584" y="357" width="190" height="112" rx="10" fill="#fff" stroke="#afb8d2"/>
+    <text x="604" y="393" font-size="23" font-weight="700">Grafana</text>
+    <text x="604" y="421" font-size="15" fill="#526675">Explore room history</text>
+    <text x="604" y="447" font-size="13" fill="#5265a8">24-hour default view</text>
+
+    <!-- Arrowheads indicate request direction; Grafana queries storage. -->
+    <g fill="none" stroke="#087f8c" stroke-width="2" marker-end="url(#teal-arrow)">
+      <path d="M210 249H334"/><path d="M500 249H584"/><path d="M774 212H876"/>
+    </g>
+    <text x="272" y="230" text-anchor="middle" font-size="13" fill="#087f8c">HTTP JSON</text>
+    <text x="825" y="195" text-anchor="middle" font-size="13" fill="#087f8c">Write</text>
+    <g fill="none" stroke="#5265a8" stroke-width="2" marker-end="url(#blue-arrow)">
+      <path d="M210 413H334"/><path d="M500 413H584"/>
+      <path d="M774 413H974V280"/>
+    </g>
+    <text x="272" y="394" text-anchor="middle" font-size="13" fill="#5265a8">HTTPS</text>
+    <text x="867" y="395" text-anchor="middle" font-size="14" fill="#5265a8">Query history</text>
+    <path d="M334 493H1072" stroke="#c4d0d9"/>
+    <text x="334" y="521" font-size="13" fill="#526675">Only Nginx is public</text>
+    <text x="584" y="521" font-size="13" fill="#526675">Persistent volumes for InfluxDB and Grafana</text>
+    <text x="32" y="521" font-size="12" fill="#687985">* When valid</text>
+  </g>
+</svg>

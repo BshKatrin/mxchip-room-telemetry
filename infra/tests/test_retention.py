@@ -4,6 +4,7 @@ Run with RUN_INFLUX_INTEGRATION=1 and INFLUX_URL/TOKEN/ORG configured.
 No production bucket or task is changed. Python standard library only.
 """
 
+import base64
 import importlib.util
 import json
 import os
@@ -120,6 +121,60 @@ class RetentionIntegration(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "injected"):
             self.admin.configure()
         self.assertEqual(self.admin.bucket(self.name)["retentionRules"][0]["everySeconds"], 0)
+
+    @unittest.skipUnless(os.getenv("GRAFANA_URL"), "requires Grafana for frame-schema regression")
+    def test_grafana_frames_use_sample_time(self):
+        # Direct Flux checks miss Grafana choosing the first returned time field
+        # (_start after regrouping) instead of the actual reading timestamp.
+        fields = {"temperature_c": 20, "humidity_percent": 45, "pressure_hpa": 1000}
+        self.write([(-35, 60, "a", fields), (-2, 60, "a", fields),
+                    (-1, 60, "a", fields), (-1, 90, "b", fields), (0, 0, "a", fields)])
+        self.admin.configure()
+        dashboard = json.loads((Path(__file__).resolve().parents[1] /
+                                "grafana/provisioning/dashboards/mxchip-room.json").read_text())
+        credentials = base64.b64encode(
+            (os.environ["GRAFANA_USER"] + ":" + os.environ["GRAFANA_PASSWORD"]).encode()).decode()
+        for start, stop in ((-36, -34), (-36, 1), (-2, 1)):
+            begin, end = (self.today + timedelta(days=d) for d in (start, stop))
+            queries, expected = [], {}
+            for panel in dashboard["panels"]:
+                ref = str(panel["id"])
+                flux = (panel["targets"][0]["query"]
+                        .replace('"room_telemetry"', json.dumps(self.name))
+                        .replace('"room_telemetry_daily"', json.dumps(self.admin.daily)))
+                queries.append({"refId": ref, "datasource": {"type": "influxdb", "uid": "InfluxDB"},
+                                "query": flux, "maxDataPoints": 1000, "intervalMs": 60000})
+                rows = self.admin.query(flux.replace("v.timeRangeStart", retention.timestamp(begin))
+                                        .replace("v.timeRangeStop", retention.timestamp(end)))
+                expected[ref] = {}
+                for row in rows:
+                    instant = datetime.fromisoformat(row["_time"].replace("Z", "+00:00"))
+                    expected[ref].setdefault(row["device_id"], []).append(
+                        (int(instant.timestamp() * 1000), float(row["_value"])))
+            request = Request(os.environ["GRAFANA_URL"].rstrip("/") + "/api/ds/query",
+                              data=json.dumps({"from": str(int(begin.timestamp() * 1000)),
+                                               "to": str(int(end.timestamp() * 1000)),
+                                               "queries": queries}).encode(),
+                              headers={"Authorization": "Basic " + credentials,
+                                       "Content-Type": "application/json"})
+            with urlopen(request, timeout=60) as response:
+                results = json.load(response)["results"]
+            self.assertEqual(set(results), set(expected))
+            for ref, result in results.items():
+                self.assertFalse(result.get("error"), result.get("error"))
+                actual = {}
+                for frame in result["frames"]:
+                    schema = frame["schema"]["fields"]
+                    time_columns = [v for f, v in zip(schema, frame["data"]["values"])
+                                    if f["type"] == "time"]
+                    self.assertEqual(len(time_columns), 1, schema)
+                    for field, values in zip(schema, frame["data"]["values"]):
+                        if field["type"] == "number":
+                            device = field["labels"]["device_id"]
+                            actual.setdefault(device, []).extend(
+                                (t, v) for t, v in zip(time_columns[0], values) if v is not None)
+                self.assertEqual(actual, expected[ref])
+                self.assertEqual(sum(map(len, actual.values())), 1 if stop == -34 else 5 if start == -36 else 4)
 
     def test_empty_bucket_can_be_provisioned(self):
         self.admin.configure()

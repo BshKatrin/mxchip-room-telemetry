@@ -27,7 +27,7 @@
       "id": 1,
       "targets": [
         {
-          "query": "import \"date\"\n\n// Use a whole-day boundary so expired raw data never leaves a partial day.\ncutover = date.add(d: 1d, to: date.truncate(t: date.sub(d: 30d, from: now()), unit: 1d))\nraw = from(bucket: \"room_telemetry\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"temperature_c\")\n    |> filter(fn: (r) => r._time >= cutover)\ndaily = from(bucket: \"room_telemetry_daily\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"temperature_c_mean\")\n    |> filter(fn: (r) => r._time < cutover)\n    |> map(fn: (r) => ({r with _field: \"temperature_c\"}))\nunion(tables: [daily, raw])\n    |> group(columns: [\"device_id\", \"_field\"])\n    |> sort(columns: [\"_time\"])"
+          "query": "import \"date\"\n\n// Use a whole-day boundary so expired raw data never leaves a partial day.\ncutover = date.add(d: 1d, to: date.truncate(t: date.sub(d: 30d, from: now()), unit: 1d))\nraw = from(bucket: \"room_telemetry\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"temperature_c\")\n    |> filter(fn: (r) => r._time >= cutover)\ndaily = from(bucket: \"room_telemetry_daily\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"temperature_c_mean\")\n    |> filter(fn: (r) => r._time < cutover)\n    |> map(fn: (r) => ({r with _field: \"temperature_c\"}))\n// Expose only the sample timestamp; range bounds would become extra time axes.\nunion(tables: [daily, raw])\n    |> keep(columns: [\"_time\", \"_value\", \"_field\", \"device_id\"])\n    |> group(columns: [\"device_id\", \"_field\"])\n    |> sort(columns: [\"_time\"])"
         }
       ],
       "title": "Temperature",
@@ -54,7 +54,7 @@
       "id": 2,
       "targets": [
         {
-          "query": "import \"date\"\n\n// Use a whole-day boundary so expired raw data never leaves a partial day.\ncutover = date.add(d: 1d, to: date.truncate(t: date.sub(d: 30d, from: now()), unit: 1d))\nraw = from(bucket: \"room_telemetry\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"humidity_percent\")\n    |> filter(fn: (r) => r._time >= cutover)\ndaily = from(bucket: \"room_telemetry_daily\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"humidity_percent_mean\")\n    |> filter(fn: (r) => r._time < cutover)\n    |> map(fn: (r) => ({r with _field: \"humidity_percent\"}))\nunion(tables: [daily, raw])\n    |> group(columns: [\"device_id\", \"_field\"])\n    |> sort(columns: [\"_time\"])"
+          "query": "import \"date\"\n\n// Use a whole-day boundary so expired raw data never leaves a partial day.\ncutover = date.add(d: 1d, to: date.truncate(t: date.sub(d: 30d, from: now()), unit: 1d))\nraw = from(bucket: \"room_telemetry\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"humidity_percent\")\n    |> filter(fn: (r) => r._time >= cutover)\ndaily = from(bucket: \"room_telemetry_daily\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"humidity_percent_mean\")\n    |> filter(fn: (r) => r._time < cutover)\n    |> map(fn: (r) => ({r with _field: \"humidity_percent\"}))\n// Expose only the sample timestamp; range bounds would become extra time axes.\nunion(tables: [daily, raw])\n    |> keep(columns: [\"_time\", \"_value\", \"_field\", \"device_id\"])\n    |> group(columns: [\"device_id\", \"_field\"])\n    |> sort(columns: [\"_time\"])"
         }
       ],
       "title": "Humidity",
@@ -81,7 +81,7 @@
       "id": 3,
       "targets": [
         {
-          "query": "import \"date\"\n\n// Use a whole-day boundary so expired raw data never leaves a partial day.\ncutover = date.add(d: 1d, to: date.truncate(t: date.sub(d: 30d, from: now()), unit: 1d))\nraw = from(bucket: \"room_telemetry\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"pressure_hpa\")\n    |> filter(fn: (r) => r._time >= cutover)\ndaily = from(bucket: \"room_telemetry_daily\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"pressure_hpa_mean\")\n    |> filter(fn: (r) => r._time < cutover)\n    |> map(fn: (r) => ({r with _field: \"pressure_hpa\"}))\nunion(tables: [daily, raw])\n    |> group(columns: [\"device_id\", \"_field\"])\n    |> sort(columns: [\"_time\"])"
+          "query": "import \"date\"\n\n// Use a whole-day boundary so expired raw data never leaves a partial day.\ncutover = date.add(d: 1d, to: date.truncate(t: date.sub(d: 30d, from: now()), unit: 1d))\nraw = from(bucket: \"room_telemetry\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"pressure_hpa\")\n    |> filter(fn: (r) => r._time >= cutover)\ndaily = from(bucket: \"room_telemetry_daily\")\n    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n    |> filter(fn: (r) => r._measurement == \"room_environment\" and r._field == \"pressure_hpa_mean\")\n    |> filter(fn: (r) => r._time < cutover)\n    |> map(fn: (r) => ({r with _field: \"pressure_hpa\"}))\n// Expose only the sample timestamp; range bounds would become extra time axes.\nunion(tables: [daily, raw])\n    |> keep(columns: [\"_time\", \"_value\", \"_field\", \"device_id\"])\n    |> group(columns: [\"device_id\", \"_field\"])\n    |> sort(columns: [\"_time\"])"
         }
       ],
       "title": "Pressure",
@@ -104,6 +104,6 @@
   "timezone": "browser",
   "title": "MXChip Room Telemetry",
   "uid": "mxchip-room-telemetry",
-  "version": 4,
+  "version": 5,
   "weekStart": ""
 }

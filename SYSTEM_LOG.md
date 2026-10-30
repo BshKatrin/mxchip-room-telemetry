@@ -1,5 +1,15 @@
 # System Log
 
+## 2026-10-31 - README architecture diagram
+
+- Made the HTTP device route and HTTPS browser route explicit through Nginx, with private services, storage retention, and persistence inside the single EC2 boundary. Removed middle-dot separators from the README and diagram; runtime behavior is unchanged.
+
+## 2026-10-21 - Restore Grafana sample timestamps after aggregation
+
+- Diagnosed the apparent September 21-only history: regrouping raw and daily series exposed `_start`/`_stop` as ordinary time columns, so Grafana plotted every reading at the selected range start instead of `_time`. EC2 still held readings on every day from October 3 through October 21, with complete daily summaries through October 20 and successful hourly task runs.
+- Limited all three panel results to sample time, value, field, and device, restoring the correct time axis while preserving retention and aggregation. Added a Grafana API regression covering raw-only, summary-only, and mixed ranges across multiple devices; all five isolated InfluxDB/Grafana integration tests passed.
+- Deployed the dashboard to EC2 without restarting services. Verified the loaded panels through Grafana over 24-hour, 30-day, and historical absolute ranges: each returns one varying sample-time column. Public HTTP ingestion/HTTPS Grafana health and the production retention/task checks passed.
+
 ## 2026-10-15 - Bounded telemetry retention and daily summaries
 
 - Set the raw-data policy to 30 days and introduced daily UTC mean/minimum/maximum/count per device and sensor with 1825-day retention, preserving long-term trends while bounding storage growth.

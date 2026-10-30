@@ -71,3 +71,11 @@ RUN_INFLUX_INTEGRATION=1 uv run --no-project --python 3.13 python infra/tests/te
 
 Tests create uniquely named disposable buckets and tasks, never use the
 production bucket, and delete their test resources on completion.
+
+To also check Grafana's returned time-series frames, set `GRAFANA_URL` (including
+`/grafana` when served under that path), `GRAFANA_USER`, and `GRAFANA_PASSWORD`.
+Its `InfluxDB` datasource must use the same InfluxDB instance and have access to
+the disposable buckets. The regression verifies all three panels over raw-only,
+summary-only, and mixed ranges, including multiple devices. It requires one time
+column containing actual sample timestamps: exposing `_start`/`_stop` after
+regrouping makes Grafana collapse readings onto the selected range's start.
